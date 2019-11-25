@@ -1,0 +1,39 @@
+%
+% References:
+% [1] R. Hartley, A. Zisserman, "Multiple View Geometry in Computer
+%     Vision," Cambridge University Press, 2003.
+% [2] P. H. S. Torr and A. Zisserman, "MLESAC: A New Robust Estimator
+%     with Application to Estimating Image Geometry," Computer Vision
+%     and Image Understanding, 2000.
+
+% Copyright Ziwei Yang    K1818296    Kings College London
+% https://github.com/willyzw1221
+function [pos2]=find_matches(I1,pos1,I2)
+
+% Step 1: Converted Rgb image to Gray image
+I1=rgb2gray(I1);
+I2=rgb2gray(I2);
+
+% Step 2: Detector
+%         Detect SURF features and return SURFPoints object
+Image1_Detector=detectSURFFeatures(I1);
+Image2_Detector=detectSURFFeatures(I2);
+
+% Step 3: Descriptor
+%         Extract interest point descriptors and return feature vectors
+[Image1_Descriptor,Image1_Vaildpoint] = extractFeatures(I1,Image1_Detector,'Method','SURF');
+[Image2_Descriptor,Image2_Vaildpoint] = extractFeatures(I2,Image2_Detector,'Method','SURF');
+
+% Step 4: Match
+%         Find matching features
+Matches_found = matchFeatures(Image1_Descriptor, Image2_Descriptor);
+Image1_Matchedpoint = Image1_Vaildpoint(Matches_found(:,1));
+Image2_Matchedpoint = Image2_Vaildpoint(Matches_found(:,2));
+
+% Step 5: Transformation
+%         Estimate geometric transform from matching point pairs
+%         According to pos1 and the geometric transform, find the  pos2
+transform=estimateGeometricTransform(Image1_Matchedpoint,Image2_Matchedpoint,'similarity');
+pos2=transformPointsForward(transform,pos1);
+
+
